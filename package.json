@@ -14,7 +14,8 @@
     "lucide-vue-next": "^0.575.0",
     "radix-vue": "^1.9.17",
     "tailwind-merge": "^3.5.0",
-    "vue": "^3.5.13"
+    "vue": "^3.5.13",
+    "vue-router": "^5.0.3"
   },
   "devDependencies": {
     "@types/node": "^25.3.0",

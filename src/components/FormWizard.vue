@@ -14,6 +14,7 @@ import BehaviorStep from './steps/BehaviorStep.vue'
 import StoryStep from './steps/StoryStep.vue'
 import { coreValues } from '@/data/coreValues'
 import { submitToSheet, type NominationData } from '@/lib/submitToSheet'
+import HelloChefLogo from './HelloChefLogo.vue'
 
 type Phase = 'welcome' | 'form' | 'submitting' | 'thankyou'
 
@@ -136,13 +137,8 @@ function handleKeydown(e: KeyboardEvent) {
     @keydown="handleKeydown"
   >
     <!-- Logo -->
-    <div class="mb-6 sm:mb-8">
-      <div class="flex items-center gap-2">
-        <div class="w-10 h-10 rounded-xl bg-primary flex items-center justify-center">
-          <span class="text-white font-bold text-lg">H</span>
-        </div>
-        <span class="text-xl font-bold text-foreground">Hello Chef</span>
-      </div>
+    <div class="mb-6 sm:mb-8 flex justify-center">
+      <HelloChefLogo class="h-8 w-auto" />
     </div>
 
     <Card class="w-full max-w-lg p-6 sm:p-8">
