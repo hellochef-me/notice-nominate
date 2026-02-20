@@ -140,10 +140,21 @@ onMounted(loadNominations)
 <template>
   <div class="wall-viewport bg-offWhite" @wheel="onWheel">
     <!-- Fixed header -->
-    <header class="fixed top-0 left-0 right-0 z-20 pt-5 pb-3 px-4 text-center bg-offWhite/90 backdrop-blur-md">
-      <div class="flex flex-col items-center gap-0.5">
-        <HelloChefLogo class="h-7 w-auto" />
-        <span class="text-lg text-charcoal/80 font-medium">Notice Wall</span>
+    <header class="fixed top-0 left-0 right-0 z-20 pt-4 pb-3 px-4 sm:px-6 bg-offWhite/90 backdrop-blur-md">
+      <div class="flex items-center justify-between">
+        <div class="flex flex-col items-start gap-0.5">
+          <HelloChefLogo class="h-7 w-auto" />
+          <span class="text-base sm:text-lg text-charcoal/80 font-medium">Notice Wall</span>
+        </div>
+        <RouterLink
+          to="/nominate"
+          class="inline-flex items-center justify-center rounded-lg bg-primary p-2 sm:px-5 sm:py-2.5 sm:gap-2 text-white shadow-lg transition hover:bg-primary/90 shrink-0"
+        >
+          <svg class="w-5 h-5 sm:w-4 sm:h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 5v14M5 12h14" />
+          </svg>
+          <span class="hidden sm:inline text-sm font-medium">Nominate</span>
+        </RouterLink>
       </div>
     </header>
 
