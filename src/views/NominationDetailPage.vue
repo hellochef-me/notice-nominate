@@ -32,7 +32,7 @@ onMounted(load)
 </script>
 
 <template>
-  <div class="min-h-screen bg-offWhite py-8 px-4">
+  <div class="h-screen bg-offWhite px-4 overflow-hidden">
     <RouterLink
       to="/"
       class="fixed top-4 left-4 z-50 inline-flex items-center gap-2 text-sm font-medium text-foreground hover:text-primary transition"
@@ -65,8 +65,10 @@ onMounted(load)
       </RouterLink>
     </div>
 
-    <div v-else class="max-w-2xl mx-auto">
-      <NoticeCard :nomination="nomination" size="large" />
+    <div v-else class="h-full grid place-items-center">
+      <div class="max-w-2xl w-full">
+        <NoticeCard :nomination="nomination" size="large" />
+      </div>
     </div>
   </div>
 </template>
