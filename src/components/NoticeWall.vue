@@ -139,16 +139,16 @@ onMounted(loadNominations)
 
 <template>
   <div class="wall-viewport bg-offWhite" @wheel="onWheel">
-    <!-- Fixed header -->
-    <header class="fixed top-0 left-0 right-0 z-20 pt-4 pb-3 px-4 sm:px-6 bg-offWhite/90 backdrop-blur-md">
-      <div class="flex items-center justify-between">
+    <!-- Fixed header - liquid glass effect -->
+    <header class="glass-header">
+      <div class="glass-header-inner">
         <div class="flex flex-col items-start gap-0.5">
           <HelloChefLogo class="h-7 w-auto" />
           <span class="text-base sm:text-lg text-charcoal/80 font-medium">Notice Wall</span>
         </div>
         <RouterLink
           to="/nominate"
-          class="inline-flex items-center justify-center rounded-lg bg-primary p-2 sm:px-5 sm:py-2.5 sm:gap-2 text-white shadow-lg transition hover:bg-primary/90 shrink-0"
+          class="glass-btn inline-flex items-center justify-center rounded-full p-2 sm:rounded-lg sm:px-5 sm:py-2.5 sm:gap-2 text-white transition hover:opacity-90 shrink-0"
         >
           <svg class="w-5 h-5 sm:w-4 sm:h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M12 5v14M5 12h14" />
@@ -264,6 +264,58 @@ onMounted(loadNominations)
 </template>
 
 <style scoped>
+/* Liquid glass header */
+.glass-header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 20;
+  padding: 1rem 1rem 0.75rem;
+  margin: 1rem;
+}
+@media (min-width: 640px) {
+  .glass-header { padding: 1rem 1.5rem 0.75rem; }
+}
+.glass-header::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  border-radius: 30px;
+  -webkit-box-shadow: inset 2px 2px 0px -2px rgba(255, 255, 255, 0.7), inset 0 0 3px 1px rgba(255, 255, 255, 0.7);
+          box-shadow: inset 2px 2px 0px -2px rgba(255, 255, 255, 0.7), inset 0 0 3px 1px rgba(255, 255, 255, 0.7);
+  padding: 1rem;
+  background-color: rgb(255 255 255 / 40%);
+}
+.glass-header::after {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  border-radius: 30px;
+  -webkit-backdrop-filter: blur(5px);
+          backdrop-filter: blur(5px);
+  filter: url(#header-glass);
+  -webkit-filter: url(#header-glass);
+  overflow: hidden;
+  isolation: isolate;
+  pointer-events: none;
+  padding: 1rem;
+}
+.glass-header-inner {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.glass-btn {
+  background: #e42a12;
+  box-shadow: 0 4px 14px rgba(228, 42, 18, 0.35);
+}
+
 .wall-viewport {
   height: 100vh;
   width: 100%;
