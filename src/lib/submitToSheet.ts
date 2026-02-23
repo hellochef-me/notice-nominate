@@ -8,26 +8,34 @@ export interface NominationData {
   story: string
 }
 
+function generateId(): string {
+  return Date.now().toString(36) + Math.random().toString(36).slice(2, 8)
+}
+
 const APPS_SCRIPT_URL = import.meta.env.VITE_APPS_SCRIPT_URL as string | undefined
 
-export async function submitToSheet(data: NominationData): Promise<void> {
+export async function submitToSheet(data: NominationData): Promise<string> {
   const url = APPS_SCRIPT_URL
   if (!url) {
     throw new Error('Google Apps Script URL is not configured. Set VITE_APPS_SCRIPT_URL in your .env file.')
   }
 
+  const id = generateId()
+
   const response = await fetch(url, {
     method: 'POST',
     mode: 'no-cors',
     headers: { 'Content-Type': 'text/plain' },
-    body: JSON.stringify(data),
+    body: JSON.stringify({ ...data, id }),
   })
 
   // no-cors mode returns opaque response, so we can't read it.
   // If the fetch itself didn't throw, we treat it as success.
-  if (response.type === 'opaque') return
+  if (response.type === 'opaque') return id
 
   if (!response.ok) {
     throw new Error(`Submission failed: ${response.statusText}`)
   }
+
+  return id
 }

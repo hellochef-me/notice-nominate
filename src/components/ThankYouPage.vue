@@ -1,9 +1,17 @@
 <script setup lang="ts">
+import { computed } from 'vue'
+import { RouterLink } from 'vue-router'
 import Button from './ui/button/Button.vue'
+
+const props = defineProps<{
+  nominationId: string
+}>()
 
 defineEmits<{
   restart: []
 }>()
+
+const detailPath = computed(() => `/n/${props.nominationId}`)
 </script>
 
 <template>
@@ -23,11 +31,20 @@ defineEmits<{
       </p>
     </div>
 
-    <Button size="lg" @click="$emit('restart')">
+    <RouterLink :to="detailPath">
+      <Button size="lg" as="span">
+        View and share your nomination
+        <svg class="ml-2 w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M13 7l5 5m0 0l-5 5m5-5H6" />
+        </svg>
+      </Button>
+    </RouterLink>
+
+    <button
+      class="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+      @click="$emit('restart')"
+    >
       Submit Another Nomination
-      <svg class="ml-2 w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <path d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182" />
-      </svg>
-    </Button>
+    </button>
   </div>
 </template>

@@ -23,7 +23,6 @@ const valueDescriptions: Record<string, string> = {
   <div class="space-y-4">
     <div class="space-y-2">
       <h2 class="text-xl sm:text-2xl font-semibold text-foreground">Which core value did the nominee embody?</h2>
-      <p class="text-muted-foreground text-sm">Select the value that best represents their actions.</p>
     </div>
     <RadioGroup
       :model-value="modelValue"

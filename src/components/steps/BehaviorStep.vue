@@ -26,7 +26,6 @@ const valueLabel = computed(() => selectedValue.value?.label ?? '')
       <h2 class="text-xl sm:text-2xl font-semibold text-foreground">
         Which <span class="text-primary">{{ valueLabel }}</span> behavior did they demonstrate?
       </h2>
-      <p class="text-muted-foreground text-sm">Select the specific behavior the nominee showed.</p>
     </div>
     <RadioGroup
       :model-value="modelValue"

@@ -22,6 +22,7 @@ const phase = ref<Phase>('welcome')
 const currentStep = ref(0)
 const direction = ref<'forward' | 'backward'>('forward')
 const submitError = ref('')
+const submittedId = ref('')
 
 const TOTAL_STEPS = 7
 
@@ -98,7 +99,7 @@ async function submit() {
   }
 
   try {
-    await submitToSheet(data)
+    submittedId.value = await submitToSheet(data)
     phase.value = 'thankyou'
   } catch (err) {
     submitError.value = err instanceof Error ? err.message : 'Something went wrong. Please try again.'
@@ -186,6 +187,7 @@ function handleKeydown(e: KeyboardEvent) {
         <!-- Thank You -->
         <ThankYouPage
           v-else-if="phase === 'thankyou'"
+          :nomination-id="submittedId"
           @restart="restart"
         />
 

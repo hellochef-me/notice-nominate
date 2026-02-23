@@ -15,7 +15,6 @@ defineEmits<{
   <div class="space-y-4">
     <div class="space-y-2">
       <h2 class="text-xl sm:text-2xl font-semibold text-foreground">Share the story behind your nomination</h2>
-      <p class="text-muted-foreground text-sm">Please describe the reason or share the story behind this nomination. Be as specific as you can!</p>
     </div>
     <div class="space-y-2">
       <Label>Your nomination story</Label>

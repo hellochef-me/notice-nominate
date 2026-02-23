@@ -1,12 +1,14 @@
 export const departments = [
-  'Engineering',
-  'Marketing',
-  'Digital Product',
-  'Operations',
-  'Procurement',
-  'Customer Loyalty',
-  'Finance',
-  'Data',
-] as const
+  "Engineering",
+  "Product",
+  "Marketing",
+  "Digital Product",
+  "Customer Loyalty",
+  "Operations",
+  "Procurement",
+  "Finance",
+  "SMT",
+  "Data",
+] as const;
 
-export type Department = (typeof departments)[number]
+export type Department = (typeof departments)[number];

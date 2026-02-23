@@ -53,7 +53,7 @@ export async function fetchNominations(): Promise<Nomination[]> {
   const data = await response.json();
 
   if (Array.isArray(data)) {
-    return data.map((row: Record<string, string>) => normalizeRow(row));
+    return data.map((row: Record<string, string>) => normalizeRow(row)).reverse();
   }
 
   if (data?.error) {

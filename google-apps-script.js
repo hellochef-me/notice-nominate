@@ -29,7 +29,7 @@ function doPost(e) {
   try {
     var sheet = SpreadsheetApp.openById(SHEET_ID).getActiveSheet();
     var data = JSON.parse(e.postData.contents);
-    var id = generateId();
+    var id = data.id || generateId();
 
     sheet.appendRow([
       id,
