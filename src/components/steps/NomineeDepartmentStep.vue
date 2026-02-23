@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import Select from '../ui/select/Select.vue'
+import Combobox from '../ui/combobox/Combobox.vue'
 import Label from '../ui/label/Label.vue'
 import { departments } from '@/data/departments'
 
@@ -21,9 +21,10 @@ const departmentOptions = departments.map(d => ({ value: d, label: d }))
     </div>
     <div class="space-y-2">
       <Label>Nominee's department</Label>
-      <Select
+      <Combobox
         :model-value="modelValue"
         :options="departmentOptions"
+        :allow-custom="false"
         placeholder="Select their department"
         @update:model-value="$emit('update:modelValue', $event)"
       />

@@ -57,7 +57,13 @@ function doPost(e) {
  * Returns all nominations from the sheet for the Notice Wall.
  * GET request - no auth required.
  */
-function doGet() {
+function doGet(e) {
+  var action = (e && e.parameter && e.parameter.action) || '';
+
+  if (action === 'employees') {
+    return getEmployees();
+  }
+
   try {
     var sheet = SpreadsheetApp.openById(SHEET_ID).getActiveSheet();
     var data = sheet.getDataRange().getValues();
@@ -82,6 +88,37 @@ function doGet() {
 
     return ContentService
       .createTextOutput(JSON.stringify(rows))
+      .setMimeType(ContentService.MimeType.JSON);
+  } catch (error) {
+    return ContentService
+      .createTextOutput(JSON.stringify({ error: error.toString() }))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+}
+
+/**
+ * Returns employee names and departments from the "Employees" sheet.
+ * Columns: A = Name, B = Department
+ */
+function getEmployees() {
+  try {
+    var ss = SpreadsheetApp.openById(SHEET_ID);
+    var sheet = ss.getSheetByName('Employees');
+    var lastRow = sheet.getLastRow();
+
+    if (lastRow < 2) {
+      return ContentService
+        .createTextOutput(JSON.stringify([]))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
+
+    var data = sheet.getRange('A2:B' + lastRow).getValues();
+    var employees = data
+      .filter(function(row) { return row[0] !== '' && row[0] !== null; })
+      .map(function(row) { return { name: String(row[0]).trim(), department: String(row[1] || '').trim() }; });
+
+    return ContentService
+      .createTextOutput(JSON.stringify(employees))
       .setMimeType(ContentService.MimeType.JSON);
   } catch (error) {
     return ContentService

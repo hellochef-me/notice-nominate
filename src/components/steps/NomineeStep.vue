@@ -1,14 +1,21 @@
 <script setup lang="ts">
-import Input from '../ui/input/Input.vue'
+import Combobox from '../ui/combobox/Combobox.vue'
 import Label from '../ui/label/Label.vue'
+import type { Employee } from '@/lib/fetchEmployees'
+import { computed } from 'vue'
 
-defineProps<{
+const props = defineProps<{
   modelValue: string
+  employees: Employee[]
 }>()
 
 defineEmits<{
   'update:modelValue': [value: string]
 }>()
+
+const employeeOptions = computed(() =>
+  props.employees.map(e => ({ value: e.name, label: e.name }))
+)
 </script>
 
 <template>
@@ -18,8 +25,10 @@ defineEmits<{
     </div>
     <div class="space-y-2">
       <Label>Nominee's full name</Label>
-      <Input
+      <Combobox
         :model-value="modelValue"
+        :options="employeeOptions"
+        :allow-custom="true"
         placeholder="e.g. Jane Doe"
         @update:model-value="$emit('update:modelValue', $event)"
       />

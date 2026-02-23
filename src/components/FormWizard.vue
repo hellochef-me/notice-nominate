@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, reactive } from 'vue'
+import { ref, computed, reactive, onMounted, watch } from 'vue'
 import Card from './ui/card/Card.vue'
 import Button from './ui/button/Button.vue'
 import Progress from './ui/progress/Progress.vue'
@@ -14,6 +14,7 @@ import BehaviorStep from './steps/BehaviorStep.vue'
 import StoryStep from './steps/StoryStep.vue'
 import { coreValues } from '@/data/coreValues'
 import { submitToSheet, type NominationData } from '@/lib/submitToSheet'
+import { fetchEmployees, type Employee } from '@/lib/fetchEmployees'
 import HelloChefLogo from './HelloChefLogo.vue'
 
 type Phase = 'welcome' | 'form' | 'submitting' | 'thankyou'
@@ -23,6 +24,7 @@ const currentStep = ref(0)
 const direction = ref<'forward' | 'backward'>('forward')
 const submitError = ref('')
 const submittedId = ref('')
+const employees = ref<Employee[]>([])
 
 const TOTAL_STEPS = 7
 
@@ -34,6 +36,35 @@ const form = reactive({
   coreValue: '',
   behavior: '',
   story: '',
+})
+
+onMounted(async () => {
+  employees.value = await fetchEmployees()
+})
+
+const nominatorDeptAutoFilled = ref(false)
+const nomineeDeptAutoFilled = ref(false)
+
+watch(() => form.nominatorName, (name) => {
+  const match = employees.value.find(e => e.name === name)
+  if (match?.department) {
+    form.nominatorDepartment = match.department
+    nominatorDeptAutoFilled.value = true
+  } else if (nominatorDeptAutoFilled.value) {
+    form.nominatorDepartment = ''
+    nominatorDeptAutoFilled.value = false
+  }
+})
+
+watch(() => form.nomineeName, (name) => {
+  const match = employees.value.find(e => e.name === name)
+  if (match?.department) {
+    form.nomineeDepartment = match.department
+    nomineeDeptAutoFilled.value = true
+  } else if (nomineeDeptAutoFilled.value) {
+    form.nomineeDepartment = ''
+    nomineeDeptAutoFilled.value = false
+  }
 })
 
 const coreValueLabel = computed(() =>
@@ -115,6 +146,8 @@ function restart() {
   form.coreValue = ''
   form.behavior = ''
   form.story = ''
+  nominatorDeptAutoFilled.value = false
+  nomineeDeptAutoFilled.value = false
   currentStep.value = 0
   submitError.value = ''
   phase.value = 'welcome'
@@ -196,6 +229,7 @@ function handleKeydown(e: KeyboardEvent) {
           <NameStep
             v-if="currentStep === 0"
             v-model="form.nominatorName"
+            :employees="employees"
           />
           <DepartmentStep
             v-if="currentStep === 1"
@@ -204,6 +238,7 @@ function handleKeydown(e: KeyboardEvent) {
           <NomineeStep
             v-if="currentStep === 2"
             v-model="form.nomineeName"
+            :employees="employees"
           />
           <NomineeDepartmentStep
             v-if="currentStep === 3"

@@ -9,6 +9,7 @@ export const departments = [
   "Finance",
   "SMT",
   "Data",
+  "People & Culture",
 ] as const;
 
 export type Department = (typeof departments)[number];
