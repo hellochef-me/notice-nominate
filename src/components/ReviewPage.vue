@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import Button from './ui/button/Button.vue'
-import { coreValues, type CoreValue } from '@/data/coreValues'
+import { coreValues } from '@/data/coreValues'
 
 const props = defineProps<{
   nominatorName: string
@@ -26,17 +26,11 @@ const formattedDate = computed(() =>
   }).replace(/\//g, '-')
 )
 
-function isSelected(value: CoreValue): boolean {
-  if (value.id !== props.coreValue) return false
-  return value.behaviors.includes(props.behavior)
-}
-
-function getDisplayLabel(value: CoreValue): string {
-  if (isSelected(value)) {
-    return `${value.label} - ${props.behavior}`
-  }
-  return value.label
-}
+const selectedValueDisplay = computed(() => {
+  const value = coreValues.find(v => v.id === props.coreValue)
+  if (!value) return props.behavior
+  return `${value.label} - ${props.behavior}`
+})
 </script>
 
 <template>
@@ -76,39 +70,7 @@ function getDisplayLabel(value: CoreValue): string {
     <!-- Nomination Value -->
     <div class="space-y-2">
       <p class="text-xs font-medium text-muted-foreground">Nomination Value:</p>
-      <ul class="space-y-2">
-        <li
-          v-for="value in coreValues"
-          :key="value.id"
-          class="flex items-start gap-2"
-        >
-          <span
-            class="mt-0.5 flex-shrink-0 w-4 h-4 rounded border flex items-center justify-center"
-            :class="isSelected(value)
-              ? 'border-primary bg-primary'
-              : 'border-muted-foreground/30'"
-          >
-            <svg
-              v-if="isSelected(value)"
-              class="w-2.5 h-2.5 text-primary-foreground"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="3"
-            >
-              <path d="M5 12l5 5L20 7" />
-            </svg>
-          </span>
-          <span
-            class="text-sm"
-            :class="isSelected(value)
-              ? 'font-medium text-foreground'
-              : 'text-muted-foreground'"
-          >
-            {{ getDisplayLabel(value) }}
-          </span>
-        </li>
-      </ul>
+      <p class="text-sm font-medium text-foreground">{{ selectedValueDisplay }}</p>
     </div>
 
     <!-- Reason for Nomination -->
