@@ -5,6 +5,7 @@ import Button from './ui/button/Button.vue'
 import Progress from './ui/progress/Progress.vue'
 import WelcomePage from './WelcomePage.vue'
 import ThankYouPage from './ThankYouPage.vue'
+import ReviewPage from './ReviewPage.vue'
 import NameStep from './steps/NameStep.vue'
 import DepartmentStep from './steps/DepartmentStep.vue'
 import NomineeStep from './steps/NomineeStep.vue'
@@ -17,7 +18,7 @@ import { submitToSheet, type NominationData } from '@/lib/submitToSheet'
 import { fetchEmployees, type Employee } from '@/lib/fetchEmployees'
 import HelloChefLogo from './HelloChefLogo.vue'
 
-type Phase = 'welcome' | 'form' | 'submitting' | 'thankyou'
+type Phase = 'welcome' | 'form' | 'review' | 'submitting' | 'thankyou'
 
 const phase = ref<Phase>('welcome')
 const currentStep = ref(0)
@@ -104,7 +105,7 @@ function next() {
   if (currentStep.value < TOTAL_STEPS - 1) {
     currentStep.value++
   } else {
-    submit()
+    phase.value = 'review'
   }
 }
 
@@ -113,6 +114,13 @@ function back() {
   if (currentStep.value > 0) {
     currentStep.value--
   }
+}
+
+function goBackFromReview() {
+  direction.value = 'backward'
+  submitError.value = ''
+  phase.value = 'form'
+  currentStep.value = 6
 }
 
 async function submit() {
@@ -224,8 +232,22 @@ function handleKeydown(e: KeyboardEvent) {
           @restart="restart"
         />
 
+        <!-- Review -->
+        <ReviewPage
+          v-else-if="phase === 'review'"
+          :nominator-name="form.nominatorName"
+          :nominator-department="form.nominatorDepartment"
+          :nominee-name="form.nomineeName"
+          :nominee-department="form.nomineeDepartment"
+          :core-value="form.coreValue"
+          :behavior="form.behavior"
+          :story="form.story"
+          @back="goBackFromReview"
+          @submit="submit"
+        />
+
         <!-- Form Steps -->
-        <div v-else :key="currentStep">
+        <div v-else-if="phase === 'form'" :key="currentStep">
           <NameStep
             v-if="currentStep === 0"
             v-model="form.nominatorName"
@@ -276,12 +298,9 @@ function handleKeydown(e: KeyboardEvent) {
               :disabled="!isCurrentStepValid"
               @click="next"
             >
-              {{ currentStep === TOTAL_STEPS - 1 ? 'Submit' : 'Next' }}
-              <svg v-if="currentStep < TOTAL_STEPS - 1" class="ml-2 w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              Next
+              <svg class="ml-2 w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M13 7l5 5m0 0l-5 5m5-5H6" />
-              </svg>
-              <svg v-else class="ml-2 w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M4.5 12.75l6 6 9-13.5" />
               </svg>
             </Button>
           </div>
