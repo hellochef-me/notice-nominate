@@ -6,6 +6,7 @@ import Progress from './ui/progress/Progress.vue'
 import WelcomePage from './WelcomePage.vue'
 import ThankYouPage from './ThankYouPage.vue'
 import ReviewPage from './ReviewPage.vue'
+import PhotoCaptureStep from './PhotoCaptureStep.vue'
 import NameStep from './steps/NameStep.vue'
 import DepartmentStep from './steps/DepartmentStep.vue'
 import NomineeStep from './steps/NomineeStep.vue'
@@ -16,14 +17,16 @@ import StoryStep from './steps/StoryStep.vue'
 import { coreValues } from '@/data/coreValues'
 import { submitToSheet, type NominationData } from '@/lib/submitToSheet'
 import { fetchEmployees, type Employee } from '@/lib/fetchEmployees'
+import { parseNominationPhoto } from '@/lib/parseNominationPhoto'
 import HelloChefLogo from './HelloChefLogo.vue'
 
-type Phase = 'welcome' | 'form' | 'review' | 'submitting' | 'thankyou'
+type Phase = 'welcome' | 'photo' | 'analyzing' | 'form' | 'review' | 'submitting' | 'thankyou'
 
 const phase = ref<Phase>('welcome')
 const currentStep = ref(0)
 const direction = ref<'forward' | 'backward'>('forward')
 const submitError = ref('')
+const photoError = ref('')
 const submittedId = ref('')
 const employees = ref<Employee[]>([])
 
@@ -38,6 +41,9 @@ const form = reactive({
   behavior: '',
   story: '',
 })
+
+const photoMode = ref(false)
+const missingSteps = ref<number[]>([])
 
 onMounted(async () => {
   employees.value = await fetchEmployees()
@@ -72,8 +78,8 @@ const coreValueLabel = computed(() =>
   coreValues.find(v => v.id === form.coreValue)?.label ?? ''
 )
 
-const isCurrentStepValid = computed(() => {
-  switch (currentStep.value) {
+function isStepFilled(step: number): boolean {
+  switch (step) {
     case 0: return form.nominatorName.trim().length > 0
     case 1: return form.nominatorDepartment.length > 0
     case 2: return form.nomineeName.trim().length > 0
@@ -83,15 +89,83 @@ const isCurrentStepValid = computed(() => {
     case 6: return form.story.trim().length > 0
     default: return false
   }
+}
+
+const isCurrentStepValid = computed(() => isStepFilled(currentStep.value))
+
+function computeMissingSteps(): number[] {
+  const missing: number[] = []
+  for (let i = 0; i < TOTAL_STEPS; i++) {
+    if (!isStepFilled(i)) missing.push(i)
+  }
+  return missing
+}
+
+const displayStepNumber = computed(() => {
+  if (!photoMode.value) return currentStep.value + 1
+  const idx = missingSteps.value.indexOf(currentStep.value)
+  return idx >= 0 ? idx + 1 : 1
+})
+
+const displayTotalSteps = computed(() => {
+  if (!photoMode.value) return TOTAL_STEPS
+  return missingSteps.value.length
 })
 
 const progressPercent = computed(() =>
-  Math.round(((currentStep.value + 1) / TOTAL_STEPS) * 100)
+  Math.round((displayStepNumber.value / displayTotalSteps.value) * 100)
 )
 
 function start() {
+  photoMode.value = false
+  missingSteps.value = []
   phase.value = 'form'
   currentStep.value = 0
+}
+
+function startPhoto() {
+  photoError.value = ''
+  phase.value = 'photo'
+}
+
+async function analyzePhoto(base64Image: string) {
+  phase.value = 'analyzing'
+  photoError.value = ''
+
+  try {
+    const result = await parseNominationPhoto(base64Image, employees.value)
+
+    form.nominatorName = result.nominatorName
+    form.nomineeName = result.nomineeName
+    form.coreValue = result.coreValue
+    form.behavior = result.behavior
+    form.story = result.story
+
+    // Allow watchers to auto-fill departments from name matches first
+    await new Promise(r => setTimeout(r, 50))
+
+    if (!form.nominatorDepartment && result.nominatorDepartment) {
+      form.nominatorDepartment = result.nominatorDepartment
+    }
+    if (!form.nomineeDepartment && result.nomineeDepartment) {
+      form.nomineeDepartment = result.nomineeDepartment
+    }
+
+    photoMode.value = true
+    missingSteps.value = computeMissingSteps()
+
+    if (missingSteps.value.length === 0) {
+      direction.value = 'forward'
+      phase.value = 'review'
+    } else {
+      direction.value = 'forward'
+      currentStep.value = missingSteps.value[0]
+      phase.value = 'form'
+    }
+  } catch (err) {
+    photoError.value = err instanceof Error ? err.message : 'Failed to analyze the photo. Please try again.'
+    phase.value = 'photo'
+  }
 }
 
 function next() {
@@ -102,25 +176,61 @@ function next() {
     form.behavior = ''
   }
 
-  if (currentStep.value < TOTAL_STEPS - 1) {
-    currentStep.value++
+  if (photoMode.value) {
+    missingSteps.value = computeMissingSteps()
+    const currentIdx = missingSteps.value.indexOf(currentStep.value)
+    const remaining = missingSteps.value.filter(s => s > currentStep.value)
+    if (remaining.length > 0) {
+      currentStep.value = remaining[0]
+    } else {
+      phase.value = 'review'
+    }
   } else {
-    phase.value = 'review'
+    if (currentStep.value < TOTAL_STEPS - 1) {
+      currentStep.value++
+    } else {
+      phase.value = 'review'
+    }
   }
 }
 
 function back() {
   direction.value = 'backward'
-  if (currentStep.value > 0) {
-    currentStep.value--
+
+  if (photoMode.value) {
+    const previous = missingSteps.value.filter(s => s < currentStep.value)
+    if (previous.length > 0) {
+      currentStep.value = previous[previous.length - 1]
+    } else {
+      phase.value = 'photo'
+      photoMode.value = false
+      missingSteps.value = []
+    }
+  } else {
+    if (currentStep.value > 0) {
+      currentStep.value--
+    }
   }
 }
 
 function goBackFromReview() {
   direction.value = 'backward'
   submitError.value = ''
-  phase.value = 'form'
-  currentStep.value = 6
+
+  if (photoMode.value) {
+    missingSteps.value = computeMissingSteps()
+    if (missingSteps.value.length > 0) {
+      currentStep.value = missingSteps.value[missingSteps.value.length - 1]
+      phase.value = 'form'
+    } else {
+      currentStep.value = 6
+      photoMode.value = false
+      phase.value = 'form'
+    }
+  } else {
+    phase.value = 'form'
+    currentStep.value = 6
+  }
 }
 
 async function submit() {
@@ -158,6 +268,9 @@ function restart() {
   nomineeDeptAutoFilled.value = false
   currentStep.value = 0
   submitError.value = ''
+  photoError.value = ''
+  photoMode.value = false
+  missingSteps.value = []
   phase.value = 'welcome'
 }
 
@@ -166,7 +279,7 @@ function handleKeydown(e: KeyboardEvent) {
     e.key === 'Enter' &&
     phase.value === 'form' &&
     isCurrentStepValid.value &&
-    currentStep.value !== 6 // Don't auto-advance on story textarea
+    currentStep.value !== 6
   ) {
     next()
   }
@@ -188,7 +301,7 @@ function handleKeydown(e: KeyboardEvent) {
       <div v-if="phase === 'form'" class="mb-6">
         <div class="flex items-center justify-between mb-2">
           <span class="text-xs font-medium text-muted-foreground">
-            Step {{ currentStep + 1 }} of {{ TOTAL_STEPS }}
+            Step {{ displayStepNumber }} of {{ displayTotalSteps }}
           </span>
           <span class="text-xs font-medium text-muted-foreground">
             {{ progressPercent }}%
@@ -214,7 +327,33 @@ function handleKeydown(e: KeyboardEvent) {
         <WelcomePage
           v-if="phase === 'welcome'"
           @start="start"
+          @start-photo="startPhoto"
         />
+
+        <!-- Photo Capture -->
+        <div v-else-if="phase === 'photo'" key="photo">
+          <div
+            v-if="photoError"
+            class="mb-4 p-3 rounded-lg bg-destructive/10 border border-destructive/20 text-destructive text-sm"
+          >
+            {{ photoError }}
+          </div>
+          <PhotoCaptureStep
+            @analyze="analyzePhoto"
+            @back="phase = 'welcome'"
+          />
+        </div>
+
+        <!-- Analyzing Photo -->
+        <div
+          v-else-if="phase === 'analyzing'"
+          key="analyzing"
+          class="flex flex-col items-center justify-center py-12 space-y-4"
+        >
+          <div class="w-12 h-12 border-4 border-primary/30 border-t-primary rounded-full animate-spin" />
+          <p class="text-muted-foreground font-medium">Analyzing your photo...</p>
+          <p class="text-xs text-muted-foreground">Reading the nomination form with AI</p>
+        </div>
 
         <!-- Submitting -->
         <div
@@ -283,7 +422,7 @@ function handleKeydown(e: KeyboardEvent) {
           <!-- Navigation buttons -->
           <div class="flex items-center justify-between mt-8">
             <Button
-              v-if="currentStep > 0"
+              v-if="currentStep > 0 || photoMode"
               variant="ghost"
               @click="back"
             >
